@@ -1,0 +1,85 @@
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+# Variáveis linguísticas e seus universos de discurso
+recursos_humanos = ctrl.Antecedent(np.arange(0, 11, 1), 'recursos_humanos')
+recursos_fisicos = ctrl.Antecedent(np.arange(0, 11, 1), 'recursos_fisicos')
+tempo_tarefa = ctrl.Antecedent(np.arange(0, 61, 1), 'tempo_tarefa')
+prazo = ctrl.Consequent(np.arange(0, 11, 1), 'prazo')
+riscos_tecnicos = ctrl.Antecedent(np.arange(0, 11, 1), 'riscos_tecnicos')
+riscos_mercado = ctrl.Antecedent(np.arange(0, 11, 1), 'riscos_mercado')
+
+# Funções de pertinência triangular para as variáveis linguísticas
+
+# Recursos Humanos
+recursos_humanos['baixa'] = fuzz.trimf(recursos_humanos.universe, [0, 1, 5])
+recursos_humanos['moderada'] = fuzz.trimf(recursos_humanos.universe, [4, 5, 7])
+recursos_humanos['alta'] = fuzz.trimf(recursos_humanos.universe, [6, 10, 10])
+
+# Recursos Físicos
+recursos_fisicos['baixa'] = fuzz.trimf(recursos_fisicos.universe, [0, 1, 5])
+recursos_fisicos['moderada'] = fuzz.trimf(recursos_fisicos.universe, [4, 5, 7])
+recursos_fisicos['alta'] = fuzz.trimf(recursos_fisicos.universe, [6, 10, 10])
+
+# Tempo da Tarefa
+tempo_tarefa['curta'] = fuzz.trimf(tempo_tarefa.universe, [0, 0, 15])
+tempo_tarefa['moderada'] = fuzz.trimf(tempo_tarefa.universe, [10, 20, 45])
+tempo_tarefa['longa'] = fuzz.trimf(tempo_tarefa.universe, [40, 60, 60])
+
+# Prazo
+prazo['atrasado'] = fuzz.trimf(prazo.universe, [5, 7.5, 10])
+prazo['no_prazo'] = fuzz.trimf(prazo.universe, [2.5, 5, 7.5])
+prazo['adiantado'] = fuzz.trimf(prazo.universe, [0, 2.5, 5])
+
+# Riscos Técnicos
+riscos_tecnicos['baixo'] = fuzz.trimf(riscos_tecnicos.universe, [0, 1, 6])
+riscos_tecnicos['medio'] = fuzz.trimf(riscos_tecnicos.universe, [4, 5, 7])
+riscos_tecnicos['alto'] = fuzz.trimf(riscos_tecnicos.universe, [6, 10, 10])
+
+# Riscos de Mercado
+riscos_mercado['baixo'] = fuzz.trimf(riscos_mercado.universe, [0, 1, 6])
+riscos_mercado['medio'] = fuzz.trimf(riscos_mercado.universe, [4, 5, 7])
+riscos_mercado['alto'] = fuzz.trimf(riscos_mercado.universe, [6, 10, 10])
+
+# Definindo as regras fuzzy
+regra1 = ctrl.Rule(recursos_humanos['baixa'] & recursos_fisicos['baixa'], prazo['atrasado'])
+regra2 = ctrl.Rule(recursos_humanos['moderada'] & recursos_fisicos['alta'], prazo['no_prazo'])
+regra3 = ctrl.Rule(recursos_humanos['alta'] & recursos_fisicos['moderada'], prazo['no_prazo'])
+regra4 = ctrl.Rule(recursos_fisicos['alta'] & tempo_tarefa['curta'], prazo['adiantado'])
+regra5 = ctrl.Rule(tempo_tarefa['longa'] & riscos_tecnicos['alto'], prazo['atrasado'])
+regra6 = ctrl.Rule(recursos_humanos['alta'] & recursos_fisicos['alta'], prazo['no_prazo'])
+regra7 = ctrl.Rule(recursos_humanos['moderada'] & riscos_mercado['medio'], prazo['no_prazo'])
+regra8 = ctrl.Rule(recursos_fisicos['baixa'] & riscos_tecnicos['baixo'], prazo['atrasado'])
+regra9 = ctrl.Rule(tempo_tarefa['moderada'] & recursos_humanos['moderada'], prazo['no_prazo'])
+regra10 = ctrl.Rule(recursos_fisicos['alta'] & recursos_humanos['alta'], prazo['adiantado'])
+regra11 = ctrl.Rule(tempo_tarefa['curta'] & riscos_tecnicos['baixo'], prazo['adiantado'])
+regra12 = ctrl.Rule(recursos_humanos['baixa'] & riscos_mercado['alto'], prazo['atrasado'])
+regra13 = ctrl.Rule(recursos_fisicos['baixa'] & prazo['atrasado'], prazo['atrasado'])
+regra14 = ctrl.Rule(tempo_tarefa['moderada'] & riscos_mercado['baixo'], prazo['adiantado'])
+regra15 = ctrl.Rule(recursos_fisicos['moderada'] & riscos_tecnicos['medio'], prazo['no_prazo'])
+
+# Sistema de controle 
+sistema = ctrl.ControlSystem([regra1, regra2, regra3, regra4, regra5, regra6, regra7, regra8, regra9, regra10, regra11, regra12, regra13, regra14, regra15])
+
+simulacao = ctrl.ControlSystemSimulation(sistema)
+
+def calcular_prazo(recursos_humanos_valor, recursos_fisicos_valor, tempo_tarefa_valor, riscos_tecnicos_valor, riscos_mercado_valor)
+    simulacao.input['recursos_humanos'] = recursos_humanos_valor
+    simulacao.input['recursos_fisicos'] = recursos_fisicos_valor
+    simulacao.input['tempo_tarefa'] = tempo_tarefa_valor
+    simulacao.input['riscos_tecnicos'] = riscos_tecnicos_valor
+    simulacao.input['riscos_mercado'] = riscos_mercado_valor
+    simulacao.compute()
+    return simulacao.output['prazo']
+
+# Teste
+recursos_humanos_teste = 7
+recursos_fisicos_teste = 1
+tempo_tarefa_teste = 10
+riscos_tecnicos_teste = 5
+riscos_mercado_teste = 4
+
+prazo_estimado = calcular_prazo(recursos_humanos_teste, recursos_fisicos_teste, tempo_tarefa_teste, riscos_tecnicos_teste, riscos_mercado_teste)
+
+print(f'Prazo estimado {prazo_estimado}')
